@@ -264,7 +264,11 @@ inline void acknowledgeCommand() {
   flushSerial();
 }
 
+<<<<<<< HEAD
 void cmdRapidPositioning() {
+=======
+void rapidPositioning() {
+>>>>>>> 9c53fcd2f64169c1f98347b58255d132efa25f1e
   
   float motion[4];
   
