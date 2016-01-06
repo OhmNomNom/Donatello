@@ -169,22 +169,16 @@ void execCommand() {
   noInterrupts();
   switch(command) {
   case CMD_NONE:
-    addToBufferS("NONE N",6);
-    addToBufferI(cmdLine);
-    addToBufferC('\n');
+    cmdNone();
     break;
   case CMD_FLAGS:
-    addToBufferC('N');
-    addToBufferI(cmdLine);
-    addToBufferS(" M70 ",5);
-    addToBufferI(stateFlags);
-    addToBufferC('\n');
+    cmdGetFlags();
     break;
   case CMD_RPOS:
-    rapidPositioning();
+    cmdRapidPositioning();
     break;
   case CMD_LINEAR:
-    linearInterpolation();
+    cmdLinearInterpolation();
     break;
   case CMD_ECHO:
     cmdEcho();
@@ -202,12 +196,10 @@ void execCommand() {
     cmdPosition();
     break;
   case CMD_MODEABS:
-    setFlag(FLAG_ABSOLUTE_MODE);
-    acknowledgeCommand();
+    cmdAbsoluteMode();
     break;
   case CMD_MODEINC:
-    unsetFlag(FLAG_ABSOLUTE_MODE);
-    acknowledgeCommand();
+    cmdIncrementalMode();
     break;
   case CMD_SETTEMP:
     cmdSetTemperature();
@@ -216,51 +208,22 @@ void execCommand() {
     cmdSetPos();
     break;
   case CMD_GET_TIME:
-    addToBufferS("M71 T",5);
-    addToBufferUI(micros());
-    addToBufferS(" S",2);    
-    addToBufferI(timeInterval);
-    addToBufferC('\n');
+    cmdGetTime();
     break;
   case CMD_GETTEMP:
-    addToBufferS("M105 T",6);
-    addToBufferF(getExtruderTemperature());
-    addToBufferS(" S",2);    
-    addToBufferF(activeTemperature);
-    addToBufferS(" R",2);    
-    addToBufferF(idleTemperature);
-    addToBufferS(" F",2);    
-    addToBufferI(isFlagSet(FLAG_HOTEND_ON)? (isFlagSet(FLAG_ACTIVE_TEMP)? 2 : 1) : 0);
-    addToBufferC('\n');
+    cmdGetTemp();
     break;
   case CMD_HOTEND_PASSIVE:
-    startTemperatureControl(false);
-    acknowledgeCommand();
+    cmdHotendPassive();
     break;
   case CMD_HOTEND_ACTIVE:
-    startTemperatureControl(true);
-    acknowledgeCommand();
+    cmdHotendActive();
     break;
   case CMD_HOTEND_OFF:
-    stopTemperatureControl();
-    acknowledgeCommand();
+    cmdHotendOff();
     break;
   case CMD_GET_STEPS:
-    addToBufferS("STPS N",6);
-    addToBufferI(cmdLine);
-    addToBufferS(" X",2);
-    addToBufferF(Axes[X].steps);
-    addToBufferS(" Y",2);
-    addToBufferF(Axes[Y].steps);
-    addToBufferS(" Z",2);
-    addToBufferF(Axes[Z].steps);
-    addToBufferS(" E",2);
-    addToBufferF(Axes[E].steps);
-    addToBufferS(" F",2);
-    addToBufferF(Axes[X].lastMicros);
-    addToBufferS(" S",2);
-    addToBufferF(Axes[X].stepTime);
-    addToBufferC('\n');
+    cmdGetSteps();
     break;
   }
   interrupts();
@@ -301,7 +264,7 @@ inline void acknowledgeCommand() {
   flushSerial();
 }
 
-void rapidPositioning() {
+void cmdRapidPositioning() {
   
   float motion[4];
   
@@ -334,7 +297,7 @@ void rapidPositioning() {
     resetAxes();
   }
 }
-void linearInterpolation() {
+void cmdLinearInterpolation() {
   if(cmdParams[F] > MAXSPEED_LINEAR || cmdParams[S] > MAXSPEED[E]) {
     invalidCommand();
     return;
@@ -446,4 +409,77 @@ void cmdSetPos() {
   if(!isnan(cmdParams[Y])) Axes[Y].position = cmdParams[Y] / STEPLENGTH[Y];
   if(!isnan(cmdParams[Z])) Axes[Z].position = cmdParams[Z] / STEPLENGTH[Z];
   acknowledgeCommand();
+}
+
+void cmdGetTime() {
+  addToBufferS(" M71 T",5);
+  addToBufferUI(micros());
+  addToBufferS(" S",2);    
+  addToBufferI(timeInterval);
+  addToBufferC('\n');
+}
+
+void cmdGetFlags() {
+  addToBufferS(" M70 ",5);
+  addToBufferI(stateFlags);
+  addToBufferC('\n');
+}
+
+void cmdGetTemp() {
+  addToBufferS("M105 T",6);
+  addToBufferF(getExtruderTemperature());
+  addToBufferS(" S",2);    
+  addToBufferF(activeTemperature);
+  addToBufferS(" R",2);    
+  addToBufferF(idleTemperature);
+  addToBufferS(" F",2);    
+  addToBufferI(isFlagSet(FLAG_HOTEND_ON)? (isFlagSet(FLAG_ACTIVE_TEMP)? 2 : 1) : 0);
+  addToBufferC('\n');
+}
+
+void cmdGetSteps() {
+  addToBufferS("M74 X",5);
+  addToBufferF(Axes[X].steps);
+  addToBufferS(" Y",2);
+  addToBufferF(Axes[Y].steps);
+  addToBufferS(" Z",2);
+  addToBufferF(Axes[Z].steps);
+  addToBufferS(" E",2);
+  addToBufferF(Axes[E].steps);
+  addToBufferS(" F",2);
+  addToBufferF(Axes[X].lastMicros);
+  addToBufferS(" S",2);
+  addToBufferF(Axes[X].stepTime);
+  addToBufferC('\n');
+}
+
+void cmdHotendPassive() {
+  startTemperatureControl(false);
+  acknowledgeCommand();
+}
+
+void cmdHotendActive() {
+  startTemperatureControl(true);
+  acknowledgeCommand();
+}
+
+void cmdHotendOff() {
+  stopTemperatureControl();
+  acknowledgeCommand();
+}
+
+void cmdAbsoluteMode() {
+  setFlag(FLAG_ABSOLUTE_MODE);
+  acknowledgeCommand();
+}
+
+void cmdIncrementalMode() {  
+  unsetFlag(FLAG_ABSOLUTE_MODE);
+  acknowledgeCommand();
+}
+
+void cmdNone() {
+  addToBufferS("NONE N",6);
+  addToBufferI(cmdLine);
+  addToBufferC('\n');
 }

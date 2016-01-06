@@ -1,4 +1,8 @@
+#include "Interpreter.h"
+#include "Extruder.h"
+#include "Base.h"
 
+//Choose correct timer based on board
 #if defined(__AVR_ATmega32U4__)
   #include "TimerThree.h"
   #define TIMER Timer3
@@ -6,9 +10,6 @@
   #include "TimerOne.h"
   #define TIMER Timer1
 #endif
-#include "Interpreter.h"
-#include "Extruder.h"
-#include "Base.h"
   
 void setup() {
   Serial.begin(9600);

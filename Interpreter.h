@@ -60,8 +60,8 @@ inline void clearPrevCommand();
 inline void invalidCommand();
 inline void acknowledgeCommand();
 void doneMoving();
-void rapidPositioning();
-void linearInterpolation();
+void cmdRapidPositioning();
+void cmdLinearInterpolation();
 void cmdEcho();
 inline void cmdHalt();
 void cmdResume();
@@ -69,5 +69,15 @@ void cmdRecover();
 void cmdPosition();
 void cmdSetTemperature();
 void cmdSetPos();
+void cmdGetTime();
+void cmdGetFlags();
+void cmdGetTemp();
+void cmdGetSteps();
+void cmdHotendPassive();
+void cmdHotendActive();
+void cmdHotendOff();
+void cmdAbsoluteMode();
+void cmdIncrementalMode();
+void cmdNone();
 
 #endif

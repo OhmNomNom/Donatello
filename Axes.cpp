@@ -117,7 +117,6 @@ void stepperWorker(const ULONG now) {
     } else unsetFlag(MOVFLAG[E]);
   }
   
-  
 }
 
 void startStepperControl() {

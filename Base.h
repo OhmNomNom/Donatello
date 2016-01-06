@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <math.h>
 
-#define VERSION 0.1
+#define VERSION 0.2
 
 typedef uint_fast32_t ULONG;
 typedef int_fast32_t  SLONG;
