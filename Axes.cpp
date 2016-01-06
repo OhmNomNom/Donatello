@@ -26,16 +26,15 @@ void resetAxes() {
 bool moveAxis(ParamIndex axis, float distance, float rate) {
   
   if(isFlagSet(MOVFLAG[axis]) || (rate > MAXSPEED[axis])) return false; //if you're already moving, or you're asking sth outside the limits, fail.
-  if(distance == 0) return true;
+  
+  if(distance == 0) return true;//No movement
 
   //Set the correct direction
   digitalWrite(DIRPORT[axis], ((distance < 0) xor (INVERT[axis])));
   
-  if(distance < 0) distance = -distance; //Absolute value
-  
-  Axes[axis].steps      = distance * STEPSMILLI[axis];
-  Axes[axis].stepTime   = round(1000000UL / (rate * STEPSMILLI[axis]));
-  Axes[axis].lastMicros = 0;
+  Axes[axis].steps      = abs(distance) * STEPSMILLI[axis];
+  Axes[axis].stepTime   = round(1E6 / (rate * STEPSMILLI[axis]));
+  Axes[axis].lastMicros = micros();
   Axes[axis].direction  = ((distance < 0)?1:-1);
   
   setFlag(MOVFLAG[axis]);
@@ -120,6 +119,14 @@ void stepperWorker(const ULONG now) {
 }
 
 void startStepperControl() {
+  const ULONG NOW = micros();
+  
+  //Sync up the movements for sure
+  Axes[X].lastMicros = NOW;
+  Axes[Y].lastMicros = NOW;
+  Axes[Z].lastMicros = NOW;
+  Axes[E].lastMicros = NOW;
+  
   setFlag(FLAG_ENABLE);
 }
 

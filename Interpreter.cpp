@@ -383,7 +383,8 @@ void cmdResume() { //M97
   addToBufferS("RESUME N",8);
   addToBufferI(cmdLine);
   addToBufferC('\n');
-  setFlag(FLAG_ENABLE);
+  
+  startStepperControl()
 }
 
 void cmdRecover() { //M96
