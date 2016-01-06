@@ -16,7 +16,11 @@
 
 #ifndef TimerThree_h_
 #define TimerThree_h_
+<<<<<<< HEAD
 #if defined(__AVR_ATmega32U4__)
+=======
+
+>>>>>>> a5c93b7d81f71930975c8424d97535f0bc8aa0aa
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
 #else
@@ -290,5 +294,9 @@ class TimerThree
 extern TimerThree Timer3;
 
 #endif
+<<<<<<< HEAD
 #endif
 
+=======
+
+>>>>>>> a5c93b7d81f71930975c8424d97535f0bc8aa0aa
