@@ -384,7 +384,7 @@ void cmdResume() { //M97
   addToBufferI(cmdLine);
   addToBufferC('\n');
   
-  startStepperControl()
+  startStepperControl();
 }
 
 void cmdRecover() { //M96
