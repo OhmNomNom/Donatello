@@ -28,7 +28,7 @@ void loop() {
   while (Serial.available()) interpret(Serial.read()); //If we're getting commands, interpret them
   flushSerial(); //Flush any output put in the buffer
     
-  if(isFlagSet(FLAG_HOTEND_ON) && lastPIDMicros + PID_PERIOD <= now) {
+  if(isFlagSet(FLAG_HOTEND_ON) && (now - lastPIDMicros) >= PID_PERIOD) {
     lastPIDMicros = now;
     temperatureWorker(now); //Do the heater PID thing
   }
