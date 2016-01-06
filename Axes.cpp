@@ -46,6 +46,13 @@ bool moveAxis(ParamIndex axis, float distance, float rate) {
 
 void stepperWorker(const ULONG now) {
   
+  static ULONG XTime, YTime, ZTime, ETime;
+  
+  XTime = now - Axes[X].lastMicros;
+  YTime = now - Axes[Y].lastMicros;
+  ZTime = now - Axes[Z].lastMicros;
+  ETime = now - Axes[E].lastMicros;
+  
   if(!(isFlagSet(FLAGS_AXES))) { //If no axis is moving, movement done
     stopStepperControl();
     return;
@@ -53,11 +60,11 @@ void stepperWorker(const ULONG now) {
  
   if(isFlagSet(MOVFLAG[X])) { //If X moving
     if(Axes[X].steps) { //If there are steps left
-      if(now - Axes[X].lastMicros >= Axes[X].stepTime) { //If it's time to move
+      if(XTime >= Axes[X].stepTime) { //If it's time to move
         digitalWrite(MOVPORT[X], LOW);
         digitalWrite(MOVPORT[X], HIGH); //double-flip it
         Axes[X].steps--; //One less step to go
-        Axes[X].lastMicros = now;
+        Axes[X].lastMicros += Axes[X].stepTime;
         axisPosition[X] += axisDirection[X]; //Either +1 or -1
       }
     } else unsetFlag(MOVFLAG[X]); //Done movement
@@ -66,7 +73,7 @@ void stepperWorker(const ULONG now) {
   //Ditto
   if(isFlagSet(MOVFLAG[Y])) {
     if(Axes[Y].steps) {
-      if(now - Axes[Y].lastMicros >= Axes[Y].stepTime) {
+      if(YTime >= Axes[Y].stepTime) {
         digitalWrite(MOVPORT[Y], LOW);
         digitalWrite(MOVPORT[Y], HIGH);
         Axes[Y].steps--;
@@ -78,7 +85,7 @@ void stepperWorker(const ULONG now) {
   
   if(isFlagSet(MOVFLAG[Z])) {
     if(Axes[Z].steps) {
-      if(now - Axes[Z].lastMicros >= Axes[Z].stepTime) {
+      if(ZTime >= Axes[Z].stepTime) {
         digitalWrite(MOVPORT[Z], LOW);
         digitalWrite(MOVPORT[Z], HIGH);
         Axes[Z].steps--;
@@ -90,7 +97,7 @@ void stepperWorker(const ULONG now) {
   
   if(isFlagSet(MOVFLAG[E])) {
     if(Axes[E].steps) {
-      if(now - Axes[E].lastMicros >= Axes[E].stepTime) {
+      if(ETime >= Axes[E].stepTime) {
         digitalWrite(MOVPORT[E], LOW);
         digitalWrite(MOVPORT[E], HIGH);
         Axes[E].steps--;

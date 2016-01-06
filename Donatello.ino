@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 #if defined(__AVR_ATmega32U4__)
   #include "TimerThree.h"
   #define TIMER Timer3
@@ -6,10 +6,6 @@
   #include "TimerOne.h"
   #define TIMER Timer1
 #endif
-
-=======
-#include "TimerThree.h"
->>>>>>> a5c93b7d81f71930975c8424d97535f0bc8aa0aa
 #include "Interpreter.h"
 #include "Extruder.h"
 #include "Base.h"
@@ -21,11 +17,7 @@ void setup() {
   initInterpreter();
   initExtruder();
   
-<<<<<<< HEAD
   TIMER.attachInterrupt(timerInterrupt, WORKER_PERIOD); //Run the interrupt every WORKER_PERIOD
-=======
-  Timer3.attachInterrupt(timerInterrupt, WORKER_PERIOD); //Run the interrupt every WORKER_PERIOD
->>>>>>> a5c93b7d81f71930975c8424d97535f0bc8aa0aa
 }
 
 void loop() {
@@ -48,8 +40,4 @@ void timerInterrupt() {
     temperatureWorker(now); //Do the heater PID thing
   }
     
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> a5c93b7d81f71930975c8424d97535f0bc8aa0aa
