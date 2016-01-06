@@ -21,14 +21,16 @@ enum Command : UBYTE {
   CMD_HOTEND_ACTIVE,         //Run hotend at active temp    (M04)
   CMD_HOTEND_OFF,            //Turn off hotend              (M05)
   CMD_FLAGS,                 //Get flags DEBUGGING          (M70)
-  CMD_GET_TIME,              //Get time DEBUGGING           (M71)
-  CMD_GET_STEPS,             //Get steps DEBUGGING          (M74)
+  CMD_GETTIME,               //Get time DEBUGGING           (M71)
+  CMD_GETSTEPS,              //Get steps DEBUGGING          (M74)
   CMD_ECHO,                  //Echo                         (M77)
   CMD_RECOVER,               //Recover from HALT            (M96)
   CMD_RESUME,                //Resume motion                (M97)
   CMD_SETTEMP,               //Set target temperature       (M104)
   CMD_GETTEMP,               //Get temperature              (M105)
-  CMD_POSITION,              //Get position                 (M114)
+  CMD_GETPOS,                //Get position                 (M114)
+  CMD_SETPID,                //Set PID Params               (M301)
+  CMD_GETPID,                //Get PID Params               (M136)
 };
 
 //Our current state in interpreting
@@ -40,6 +42,11 @@ enum CommandStates : UBYTE {
   
   STATE_INVALID = 255
 };
+
+//Aliases
+const UBYTE P = X,
+            I = Y,
+            D = Z;
 
 extern UINT cmdLine,
             lineCounter,
@@ -66,7 +73,7 @@ void cmdEcho();
 inline void cmdHalt();
 void cmdResume();
 void cmdRecover();
-void cmdPosition();
+void cmdGetPosition();
 void cmdSetTemperature();
 void cmdSetPos();
 void cmdGetTime();
@@ -78,6 +85,8 @@ void cmdHotendActive();
 void cmdHotendOff();
 void cmdAbsoluteMode();
 void cmdIncrementalMode();
+void cmdSetPID();
+void cmdGetPID();
 void cmdNone();
 
 #endif

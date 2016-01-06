@@ -3,7 +3,16 @@
 float activeTemperature = 200.0f,
       idleTemperature = 140.0f,
       temperatureTolerance = 5.0f;
+      
+//PID
+static float iTerm,
+             prevError;
 
+       float KP        = 8  ,
+             KI        = 5  ,
+             KI2       = 0.9,
+             KD        = 60 ;
+             
 void initExtruder() {
   pinMode(HEATER_PORT,OUTPUT);
   pinMode(THERMISTOR_PORT,INPUT);
@@ -17,7 +26,7 @@ float getExtruderTemperature() {
   R = (1024.0f - R) / R ; //=Rtherm/Rbalance
   R = R_BALANCE * R;
 
-  T  = 1.0f / ( (1.0f/EXT_T0) + (1.0f/EXT_BETA)*log(R/EXT_R0) ); //Beta factor method
+  T  = 1.0f / ( (1.0f/EXT_T0) + (1.0f/EXT_BETA)*(log(R) - log(EXT_R0)) ); //Beta factor method
   T -= ZERO_C; //T in celsius
 
   return T;
@@ -26,15 +35,13 @@ float getExtruderTemperature() {
 void temperatureWorker(const ULONG now) { 
   const int &targetTemperature = (stateFlags & FLAG_ACTIVE_TEMP) ? activeTemperature : idleTemperature; //Which temperature to aim to
   
-  if(getExtruderTemperature() >= EXTRUDER_MAX_TEMP) { //FAIL!
+  const float currentTemperature = getExtruderTemperature();
+  
+  if(currentTemperature >= EXTRUDER_MAX_TEMP) { //FAIL!
     analogWrite(HEATER_PORT,0);
+    return;//TODO more gracefully
   }
   
-  //PID
-  static float iTerm = 0,
-               prevError = 0;
-  
-  const float currentTemperature = getExtruderTemperature();
   
   if(!isFlagSet(FLAG_HOTEND_ON)) return;
   
@@ -64,12 +71,17 @@ void temperatureWorker(const ULONG now) {
 }
 
 void startTemperatureControl(bool isActive) {
+  //Reset values
+  iTerm = 0;
+  prevError = 0;
+  
   setFlag(FLAG_HOTEND_ON);
+  
   if(isActive) setFlag(FLAG_ACTIVE_TEMP);
   else unsetFlag(FLAG_ACTIVE_TEMP);
 }
 
 void stopTemperatureControl() {
   unsetFlag(FLAG_HOTEND_ON);
-  analogWrite(HEATER_PORT,0);
+  analogWrite(HEATER_PORT,0);//Turn off heater
 }

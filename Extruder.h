@@ -9,13 +9,13 @@ const float EXT_BETA  = 3950,           //From thermistor datasheet
             EXT_R0    = 100000,         //From thermistor datasheet, 100k
             
             ZERO_C    = 273.15,         //0* C in K
-            EXTRUDER_MAX_TEMP = 250.0f, //Max temperature allowed, C
+            EXTRUDER_MAX_TEMP = 250.0f; //Max temperature allowed, C
             
             //PID Params
-            KP        = 8  ,
-            KI        = 5  ,
-            KI2       = 0.9,
-            KD        = 60 ;
+extern float KP ,
+             KI ,
+             KI2,
+             KD ;
             
 const UBYTE THERMISTOR_PORT = 10,
             HEATER_PORT     = A1;

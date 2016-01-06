@@ -3,11 +3,14 @@
 UINT cmdLine,
      lineCounter,
      movementLine;
+     
 Command command;
 UBYTE bufferPosition;
 CommandStates cmdState;
+
 char cmdBuffer[CMDBUFFER_SIZE+1],
      checksum;
+     
 float cmdParams[7],
       feedRate = MAXSPEED_LINEAR / 2,
       extrudeRate;
@@ -92,7 +95,7 @@ reparse:
     else if (strEqual(cmdBuffer,"M96"))
       command = CMD_RECOVER;
     else if (strEqual(cmdBuffer,"M114"))
-      command = CMD_POSITION;
+      command = CMD_GETPOS;
     else if (strEqual(cmdBuffer,"M105"))
       command = CMD_GETTEMP;
     else if (strEqual(cmdBuffer,"M03"))
@@ -106,9 +109,13 @@ reparse:
     else if (strEqual(cmdBuffer,"G92"))
       command = CMD_SETPOS;
     else if (strEqual(cmdBuffer,"M71"))
-      command = CMD_GET_TIME;
+      command = CMD_GETTIME;
     else if (strEqual(cmdBuffer,"M74"))
-      command = CMD_GET_STEPS;
+      command = CMD_GETSTEPS;
+    else if (strEqual(cmdBuffer,"M301"))
+      command = CMD_SETPID;
+    else if (strEqual(cmdBuffer,"M136"))
+      command = CMD_GETPID;
     else {
       cmdState = STATE_INVALID;
       break;
@@ -131,12 +138,15 @@ reparse:
     }
     switch(cmdBuffer[0]) {
       case 'X':
+      case 'P':
         cmdParams[X] = input;
         break;
       case 'Y':
+      case 'I':
         cmdParams[Y] = input;
         break;
       case 'Z':
+      case 'D':
         cmdParams[Z] = input;
         break;
       case 'E':
@@ -198,8 +208,8 @@ void execCommand() {
   case CMD_RECOVER:
     cmdRecover();
     break;
-  case CMD_POSITION:
-    cmdPosition();
+  case CMD_GETPOS:
+    cmdGetPosition();
     break;
   case CMD_MODEABS:
     cmdAbsoluteMode();
@@ -213,7 +223,7 @@ void execCommand() {
   case CMD_SETPOS:
     cmdSetPos();
     break;
-  case CMD_GET_TIME:
+  case CMD_GETTIME:
     cmdGetTime();
     break;
   case CMD_GETTEMP:
@@ -228,8 +238,14 @@ void execCommand() {
   case CMD_HOTEND_OFF:
     cmdHotendOff();
     break;
-  case CMD_GET_STEPS:
+  case CMD_GETSTEPS:
     cmdGetSteps();
+    break;
+  case CMD_SETPID:
+    cmdSetPID();
+    break;
+  case CMD_GETPID:
+    cmdGetPID();
     break;
   }
   interrupts();//Reinstate interrupts
@@ -398,7 +414,7 @@ void cmdRecover() { //M96
   addToBufferC('\n');
 }
 
-void cmdPosition() { //M114
+void cmdGetPosition() { //M114
   addToBufferS("POS N",5);
   addToBufferI(cmdLine);
   addToBufferS(" X",2);
@@ -491,6 +507,28 @@ void cmdAbsoluteMode() { //G90
 void cmdIncrementalMode() { //G91
   unsetFlag(FLAG_ABSOLUTE_MODE);
   acknowledgeCommand();
+}
+
+void cmdSetPID() { //M301
+  if(!isnan(cmdParams[P])) KP  = cmdParams[P];
+  if(!isnan(cmdParams[I])) KI  = cmdParams[I];
+  if(!isnan(cmdParams[D])) KD  = cmdParams[D];
+  
+  //Secret parameter
+  if(!isnan(cmdParams[F])) KI2 = cmdParams[F];
+  
+}
+
+void cmdGetPID() { //M136
+  addToBufferS("M136 KP",7);
+  addToBufferF(KP);
+  addToBufferS(" KI",3);
+  addToBufferF(KI);
+  addToBufferS(" KD",3);
+  addToBufferF(KD);
+  addToBufferS(" KI2",4);
+  addToBufferF(KI2);
+  addToBufferC('\n');
 }
 
 void cmdNone() { //No command
