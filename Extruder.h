@@ -6,7 +6,7 @@
 
 const float EXT_BETA  = 3950,           //From thermistor datasheet
             EXT_T0    = 298.15,         //Same, 25* C
-            EXT_R0    = 100000,         //From thermistor datasheet
+            EXT_R0    = 100000,         //From thermistor datasheet, 100k
             
             ZERO_C    = 273.15,         //0* C in K
             EXTRUDER_MAX_TEMP = 250.0f, //Max temperature allowed, C

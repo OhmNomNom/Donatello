@@ -48,9 +48,9 @@ static const float MAXSPEED   [] = {X_MAXSPEED,        Y_MAXSPEED,        Z_MAXS
                   
 
 struct Axis {
-  ULONG stepTime;   //Time for each step
+  ULONG stepTime;   //Time for each step in us
   ULONG steps;      //# of steps remaining in motion
-  SLONG lastMicros; //Last time we moved
+  SLONG lastMicros; //Last time we moved in us
 };
 
 extern volatile Axis Axes[];

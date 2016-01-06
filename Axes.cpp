@@ -39,73 +39,84 @@ bool moveAxis(ParamIndex axis, float distance, float rate) {
   Axes[axis].steps      = distance * STEPSMILLI[axis];
   Axes[axis].stepTime   = round(1000000UL / (rate * STEPSMILLI[axis]));
   Axes[axis].lastMicros = 0;
+  Axes[axis].direction  = ((distance < 0)?1:-1);
   
   setFlag(MOVFLAG[axis]);
   return true;
 }
 
 void stepperWorker(const ULONG now) {
-  
-  static ULONG XTime, YTime, ZTime, ETime;
-  
-  XTime = now - Axes[X].lastMicros;
-  YTime = now - Axes[Y].lastMicros;
-  ZTime = now - Axes[Z].lastMicros;
-  ETime = now - Axes[E].lastMicros;
-  
+  static bool XMov, YMov, ZMov, EMov;
+    
   if(!(isFlagSet(FLAGS_AXES))) { //If no axis is moving, movement done
     stopStepperControl();
     return;
   }    
  
-  if(isFlagSet(MOVFLAG[X])) { //If X moving
-    if(Axes[X].steps) { //If there are steps left
-      if(XTime >= Axes[X].stepTime) { //If it's time to move
-        digitalWrite(MOVPORT[X], LOW);
-        digitalWrite(MOVPORT[X], HIGH); //double-flip it
-        Axes[X].steps--; //One less step to go
-        Axes[X].lastMicros += Axes[X].stepTime;
-        axisPosition[X] += axisDirection[X]; //Either +1 or -1
+  XMov = (now - Axes[X].lastMicros) >= Axes[X].stepTime;
+  YMov = (now - Axes[Y].lastMicros) >= Axes[Y].stepTime;
+  ZMov = (now - Axes[Z].lastMicros) >= Axes[Z].stepTime;
+  EMov = (now - Axes[E].lastMicros) >= Axes[E].stepTime;
+  
+  if(isFlagSet(MOVFLAG[X]) && Axes[X].steps && XMov) //If X moving & If there are steps left & it's time to move
+    digitalWrite(MOVPORT[X], LOW); //Flip to move, we'll reset it to HIGH later (for synchronity)
+  
+  //Ditto
+  if(isFlagSet(MOVFLAG[Y]) && Axes[Y].steps && YMov)
+    digitalWrite(MOVPORT[Y], LOW);
+  
+  if(isFlagSet(MOVFLAG[Z]) && Axes[Z].steps && ZMov)
+    digitalWrite(MOVPORT[Z], LOW);
+  
+  if(isFlagSet(MOVFLAG[E]) && Axes[E].steps && EMov)
+    digitalWrite(MOVPORT[E], LOW);
+  
+  
+  //Do the processing that we said we'll do later
+  if(isFlagSet(MOVFLAG[X])) {
+    if(Axes[X].steps) {
+      if(XMov) {
+        digitalWrite(MOVPORT[X], HIGH); //Prepare for next movement
+        Axes[X].steps--; //We moved 1 step!!
+        Axes[X].lastMicros += Axes[X].stepTime; //Last time we moved
+        axisPosition[X] += axisDirection[X]; //Either +1 or -1, depending on how we're moving
       }
-    } else unsetFlag(MOVFLAG[X]); //Done movement
+    } else unsetFlag(MOVFLAG[X]); //We finished our movement
   }
   
   //Ditto
   if(isFlagSet(MOVFLAG[Y])) {
     if(Axes[Y].steps) {
-      if(YTime >= Axes[Y].stepTime) {
-        digitalWrite(MOVPORT[Y], LOW);
+      if(YMov) {
         digitalWrite(MOVPORT[Y], HIGH);
         Axes[Y].steps--;
-        Axes[Y].lastMicros = now;
+        Axes[Y].lastMicros += Axes[Y].stepTime;
         axisPosition[Y] += axisDirection[Y];
       }
     } else unsetFlag(MOVFLAG[Y]);
   }
-  
   if(isFlagSet(MOVFLAG[Z])) {
     if(Axes[Z].steps) {
-      if(ZTime >= Axes[Z].stepTime) {
-        digitalWrite(MOVPORT[Z], LOW);
+      if(ZMov) {
         digitalWrite(MOVPORT[Z], HIGH);
         Axes[Z].steps--;
-        Axes[Z].lastMicros = now;
+        Axes[Z].lastMicros += Axes[Z].stepTime;
         axisPosition[Z] += axisDirection[Z];
       }
     } else unsetFlag(MOVFLAG[Z]);
   }
-  
   if(isFlagSet(MOVFLAG[E])) {
     if(Axes[E].steps) {
-      if(ETime >= Axes[E].stepTime) {
-        digitalWrite(MOVPORT[E], LOW);
+      if(EMov) {
         digitalWrite(MOVPORT[E], HIGH);
         Axes[E].steps--;
-        Axes[E].lastMicros = now;
+        Axes[E].lastMicros += Axes[E].stepTime;
         axisPosition[E] += axisDirection[E];
       }
     } else unsetFlag(MOVFLAG[E]);
   }
+  
+  
 }
 
 void startStepperControl() {
