@@ -43,13 +43,15 @@ bool moveAxis(ParamIndex axis, float distance, float rate) {
 }
 
 void stepperWorker(const ULONG now) {
-  static bool XMov, YMov, ZMov, EMov;
     
   if(!(isFlagSet(FLAGS_AXES))) { //If no axis is moving, movement done
     stopStepperControl();
     return;
   }    
  
+  //If the time difference is greater than the step time, the axis should move
+  bool XMov, YMov, ZMov, EMov;
+  
   XMov = (now - Axes[X].lastMicros) >= Axes[X].stepTime;
   YMov = (now - Axes[Y].lastMicros) >= Axes[Y].stepTime;
   ZMov = (now - Axes[Z].lastMicros) >= Axes[Z].stepTime;
@@ -70,9 +72,9 @@ void stepperWorker(const ULONG now) {
   
   
   //Do the processing that we said we'll do later
-  if(isFlagSet(MOVFLAG[X])) {
-    if(Axes[X].steps) {
-      if(XMov) {
+  if(isFlagSet(MOVFLAG[X])) { //If the movement flag is set
+    if(Axes[X].steps) { //If there are steps more to move
+      if(XMov) { //If X should move (because "it's time")
         digitalWrite(MOVPORT[X], HIGH); //Prepare for next movement
         Axes[X].steps--; //We moved 1 step!!
         Axes[X].lastMicros += Axes[X].stepTime; //Last time we moved
@@ -92,6 +94,7 @@ void stepperWorker(const ULONG now) {
       }
     } else unsetFlag(MOVFLAG[Y]);
   }
+  
   if(isFlagSet(MOVFLAG[Z])) {
     if(Axes[Z].steps) {
       if(ZMov) {
@@ -102,6 +105,7 @@ void stepperWorker(const ULONG now) {
       }
     } else unsetFlag(MOVFLAG[Z]);
   }
+  
   if(isFlagSet(MOVFLAG[E])) {
     if(Axes[E].steps) {
       if(EMov) {

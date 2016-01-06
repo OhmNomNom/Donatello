@@ -302,7 +302,9 @@ inline void acknowledgeCommand() {
 }
 
 void rapidPositioning() {
-  float motion[3];
+  
+  float motion[4];
+  
   if(isFlagSet(FLAG_ABSOLUTE_MODE)) {
     motion[X] = isnan(cmdParams[X])?0:(cmdParams[X] - Axes[X].position*STEPLENGTH[X]);
     motion[Y] = isnan(cmdParams[Y])?0:(cmdParams[Y] - Axes[Y].position*STEPLENGTH[Y]);
@@ -312,6 +314,8 @@ void rapidPositioning() {
     motion[Y] = isnan(cmdParams[Y])?0:cmdParams[Y];
     motion[Z] = isnan(cmdParams[Z])?0:cmdParams[Z];
   }
+  motion[E] = cmdParams[E];
+  
   float feedRate = NAN;
   if(cmdParams[F] > 0) feedRate = cmdParams[F];
   
@@ -319,7 +323,7 @@ void rapidPositioning() {
   if(!isnan(cmdParams[X])) if(!moveAxis(X,motion[X],isnan(feedRate)?MAXSPEED[X]:feedRate)) fail = true;
   if(!isnan(cmdParams[Y])) if(!moveAxis(Y,motion[Y],isnan(feedRate)?MAXSPEED[Y]:feedRate)) fail = true;
   if(!isnan(cmdParams[Z])) if(!moveAxis(Z,motion[Z],isnan(feedRate)?MAXSPEED[Z]:feedRate)) fail = true;
-  if(!isnan(cmdParams[E])) if(!moveAxis(E,cmdParams[E],isnan(feedRate)?MAXSPEED[E]:feedRate)) fail = true;
+  if(!isnan(cmdParams[E])) if(!moveAxis(E,motion[E],isnan(feedRate)?MAXSPEED[E]:feedRate)) fail = true;
 
   if(!fail) {
     acknowledgeCommand();
@@ -336,7 +340,7 @@ void linearInterpolation() {
     return;
   }
   
-  float motion[3];
+  float motion[4];
   if(isFlagSet(FLAG_ABSOLUTE_MODE)) {
     motion[X] = isnan(cmdParams[X])?0:(cmdParams[X] - Axes[X].position*STEPLENGTH[X]);
     motion[Y] = isnan(cmdParams[Y])?0:(cmdParams[Y] - Axes[Y].position*STEPLENGTH[Y]);
@@ -346,6 +350,7 @@ void linearInterpolation() {
     motion[Y] = isnan(cmdParams[Y])?0:cmdParams[Y];
     motion[Z] = isnan(cmdParams[Z])?0:cmdParams[Z];
   }
+  motion[E] = cmdParams[E];
   
   float travel = sqrt(pow2(motion[X]) + pow2(motion[Y]) + pow2(motion[Z]));
   
@@ -355,13 +360,13 @@ void linearInterpolation() {
   velocity[X] = abs(feedRate * (motion[X] / travel));
   velocity[Y] = abs(feedRate * (motion[Y] / travel));
   velocity[Z] = abs(feedRate * (motion[Z] / travel));
-  velocity[E] = abs(cmdParams[E] * (feedRate / travel));
+  velocity[E] = abs(feedRate * (motion[E] / travel));
   
   acknowledgeCommand();
   if(!isnan(cmdParams[X])) moveAxis(X,motion[X],velocity[X]);
   if(!isnan(cmdParams[Y])) moveAxis(Y,motion[Y],velocity[Y]);
   if(!isnan(cmdParams[Z])) moveAxis(Z,motion[Z],velocity[Z]);
-  if(!isnan(cmdParams[E])) moveAxis(E,cmdParams[E],velocity[E]);
+  if(!isnan(cmdParams[E])) moveAxis(E,motion[E],velocity[E]);
   movementLine = cmdLine;
   
   startStepperControl();
