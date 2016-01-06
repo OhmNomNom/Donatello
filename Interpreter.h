@@ -5,7 +5,7 @@
 #include "Axes.h"
 #include "Extruder.h"
 
-static const UBYTE CMDBUFFER_SIZE = 16; //Max characters for command buffer (b/w spaces)
+const UBYTE CMDBUFFER_SIZE = 16; //Max characters for command buffer (b/w spaces)
 
 enum Command : UBYTE {
   CMD_NONE = 0,              //No command
@@ -18,7 +18,7 @@ enum Command : UBYTE {
   
   CMD_HALT,                  //HALT motion                  (M00)
   CMD_HOTEND_PASSIVE,        //Run hotend at passive temp   (M03)
-  CMD_HOTEND_ACTIVE,         //Run hotend at Active temp    (M04)
+  CMD_HOTEND_ACTIVE,         //Run hotend at active temp    (M04)
   CMD_HOTEND_OFF,            //Turn off hotend              (M05)
   CMD_FLAGS,                 //Get flags DEBUGGING          (M70)
   CMD_GET_TIME,              //Get time DEBUGGING           (M71)

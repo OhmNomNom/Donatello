@@ -46,21 +46,21 @@ void interpret(char c) {
 }
 
 void process() {
-  cmdBuffer[bufferPosition] = '\0';
+  cmdBuffer[bufferPosition] = '\0'; //Terminate the cstring
 reparse:
   switch(cmdState) {
   case STATE_LINENUM:
-    if(cmdBuffer[0] != 'N') {
+    if(cmdBuffer[0] != 'N') { //We don't have a line number
       cmdLine = lineCounter;
       cmdState = STATE_COMMAND;
       goto reparse;
     }
-    if(bufferPosition < 2) {
+    if(bufferPosition < 2) { //1 or no characters, invalid line #
       cmdState = STATE_INVALID;
       break;
     }
-    cmdLine = sParseUINT(cmdBuffer+1);
-    if(cmdLine < lineCounter) {
+    cmdLine = sParseUINT(cmdBuffer+1); //Get the line number
+    if(cmdLine < lineCounter) { //Can't go back
       cmdLine = lineCounter;
       cmdState = STATE_INVALID;
       break;
@@ -68,10 +68,14 @@ reparse:
     cmdState = STATE_COMMAND;
     break;
   case STATE_COMMAND:
-    if(isFlagSet(FLAG_ENABLE | FLAGS_AXES) && cmdBuffer[0] == 'G') {
+    if(isFlagSet(FLAG_ENABLE | FLAGS_AXES) && cmdBuffer[0] == 'G') { //Can't execute a G code while a movement is in progress
       cmdState = STATE_INVALID;
       break;
-    } else if (strEqual(cmdBuffer,"M70"))
+    } 
+    //Start checking every G code, probably there's a better way to do this but this isn't really performance critical..
+    else if (strEqual(cmdBuffer,"M00"))
+      command = CMD_HALT;
+    else if (strEqual(cmdBuffer,"M70"))
       command = CMD_FLAGS;
     else if (strEqual(cmdBuffer,"G00"))
       command = CMD_RPOS;
@@ -83,8 +87,6 @@ reparse:
       command = CMD_MODEINC;
     else if (strEqual(cmdBuffer,"M77"))
       command = CMD_ECHO;
-    else if (strEqual(cmdBuffer,"M00"))
-      command = CMD_HALT;
     else if (strEqual(cmdBuffer,"M97"))
       command = CMD_RESUME;
     else if (strEqual(cmdBuffer,"M96"))
@@ -111,11 +113,13 @@ reparse:
       cmdState = STATE_INVALID;
       break;
     }
+    
     cmdState = STATE_PARAMS; 
-    cmdParams[X] = cmdParams[Y] = cmdParams[Z] = cmdParams[E] = cmdParams[F] = cmdParams[S] = cmdParams[R] = NAN;
+    cmdParams[X] = cmdParams[Y] = cmdParams[Z] = cmdParams[E] = cmdParams[F] = cmdParams[S] = cmdParams[R] = NAN; //Reset all parameters
+    
     break;
   case STATE_PARAMS:
-    if(bufferPosition < 2) {
+    if(bufferPosition < 2) { //Should have 2 characters or more.
       cmdState = STATE_INVALID;
       break;
     }
@@ -166,7 +170,9 @@ void execCommand() {
     invalidCommand();
     return;
   }
-  noInterrupts();
+  
+  noInterrupts(); //Turn off interrupts (movement) while processing the things...
+                  //Probably unnecessary, TODO: CHECK!
   switch(command) {
   case CMD_NONE:
     cmdNone();
@@ -226,7 +232,8 @@ void execCommand() {
     cmdGetSteps();
     break;
   }
-  interrupts();
+  interrupts();//Reinstate interrupts
+  
   lineCounter = cmdLine + 1;
 }
 
@@ -264,7 +271,7 @@ inline void acknowledgeCommand() {
   flushSerial();
 }
 
-void cmdRapidPositioning() {
+void cmdRapidPositioning() { //G00
   float motion[4];
   
   if(isFlagSet(FLAG_ABSOLUTE_MODE)) {
@@ -296,7 +303,8 @@ void cmdRapidPositioning() {
     resetAxes();
   }
 }
-void cmdLinearInterpolation() {
+
+void cmdLinearInterpolation() { //G01
   if(cmdParams[F] > MAXSPEED_LINEAR || cmdParams[S] > MAXSPEED[E]) {
     invalidCommand();
     return;
@@ -324,18 +332,23 @@ void cmdLinearInterpolation() {
   velocity[Z] = abs(feedRate * (motion[Z] / travel));
   velocity[E] = abs(feedRate * (motion[E] / travel));
   
-  acknowledgeCommand();
-  if(!isnan(cmdParams[X])) moveAxis(X,motion[X],velocity[X]);
-  if(!isnan(cmdParams[Y])) moveAxis(Y,motion[Y],velocity[Y]);
-  if(!isnan(cmdParams[Z])) moveAxis(Z,motion[Z],velocity[Z]);
-  if(!isnan(cmdParams[E])) moveAxis(E,motion[E],velocity[E]);
-  movementLine = cmdLine;
-  
-  startStepperControl();
+  bool fail = false;
+  if(!isnan(cmdParams[X])) if(!moveAxis(X,motion[X],velocity[X])) fail = true;
+  if(!isnan(cmdParams[Y])) if(!moveAxis(Y,motion[Y],velocity[Y])) fail = true;
+  if(!isnan(cmdParams[Z])) if(!moveAxis(Z,motion[Z],velocity[Z])) fail = true;
+  if(!isnan(cmdParams[E])) if(!moveAxis(E,motion[E],velocity[E])) fail = true;
+
+  if(!fail) {
+    acknowledgeCommand();
+    movementLine = cmdLine;
+    startStepperControl();
+  } else {
+    invalidCommand();
+    resetAxes();
+  }
 }
 
-
-void cmdEcho() {
+void cmdEcho() { //M77
   addToBufferS("ECHO N",6);
   addToBufferI(cmdLine);
   addToBufferS(" X",2);
@@ -355,13 +368,14 @@ void cmdEcho() {
   addToBufferC('\n');
 }
 
-inline void cmdHalt() {
+inline void cmdHalt() { //M00
   unsetFlag(FLAG_ENABLE);
   addToBufferS("HALT N",6);
   addToBufferI(cmdLine);
   addToBufferC('\n');
 }
-void cmdResume() {
+
+void cmdResume() { //M97
   if(isFlagSet(FLAG_ENABLE) || !isFlagSet(FLAGS_AXES)) {
     invalidCommand();
     return;
@@ -371,7 +385,8 @@ void cmdResume() {
   addToBufferC('\n');
   setFlag(FLAG_ENABLE);
 }
-void cmdRecover() {
+
+void cmdRecover() { //M96
   if(isFlagSet(FLAG_ENABLE) || !isFlagSet(FLAGS_AXES)) {
     invalidCommand();
     return;
@@ -382,7 +397,7 @@ void cmdRecover() {
   addToBufferC('\n');
 }
 
-void cmdPosition() {
+void cmdPosition() { //M114
   addToBufferS("POS N",5);
   addToBufferI(cmdLine);
   addToBufferS(" X",2);
@@ -396,21 +411,21 @@ void cmdPosition() {
   addToBufferC('\n');
 }
 
-void cmdSetTemperature() {
+void cmdSetTemperature() { //M104
   if(!isnan(cmdParams[S])) activeTemperature = cmdParams[S];
   if(!isnan(cmdParams[R])) idleTemperature = cmdParams[R];
   if(!isnan(cmdParams[F])) temperatureTolerance = cmdParams[F];
   acknowledgeCommand();
 }
 
-void cmdSetPos() {
+void cmdSetPos() { //G92
   if(!isnan(cmdParams[X])) Axes[X].position = cmdParams[X] / STEPLENGTH[X];
   if(!isnan(cmdParams[Y])) Axes[Y].position = cmdParams[Y] / STEPLENGTH[Y];
   if(!isnan(cmdParams[Z])) Axes[Z].position = cmdParams[Z] / STEPLENGTH[Z];
   acknowledgeCommand();
 }
 
-void cmdGetTime() {
+void cmdGetTime() { //M71
   addToBufferS(" M71 T",5);
   addToBufferUI(micros());
   addToBufferS(" S",2);    
@@ -418,13 +433,13 @@ void cmdGetTime() {
   addToBufferC('\n');
 }
 
-void cmdGetFlags() {
+void cmdGetFlags() { //M70
   addToBufferS(" M70 ",5);
   addToBufferI(stateFlags);
   addToBufferC('\n');
 }
 
-void cmdGetTemp() {
+void cmdGetTemp() { //M105
   addToBufferS("M105 T",6);
   addToBufferF(getExtruderTemperature());
   addToBufferS(" S",2);    
@@ -436,7 +451,7 @@ void cmdGetTemp() {
   addToBufferC('\n');
 }
 
-void cmdGetSteps() {
+void cmdGetSteps() { //M74
   addToBufferS("M74 X",5);
   addToBufferF(Axes[X].steps);
   addToBufferS(" Y",2);
@@ -452,32 +467,32 @@ void cmdGetSteps() {
   addToBufferC('\n');
 }
 
-void cmdHotendPassive() {
+void cmdHotendPassive() { //M03
   startTemperatureControl(false);
   acknowledgeCommand();
 }
 
-void cmdHotendActive() {
+void cmdHotendActive() { //M04
   startTemperatureControl(true);
   acknowledgeCommand();
 }
 
-void cmdHotendOff() {
+void cmdHotendOff() { //M05
   stopTemperatureControl();
   acknowledgeCommand();
 }
 
-void cmdAbsoluteMode() {
+void cmdAbsoluteMode() { //G90
   setFlag(FLAG_ABSOLUTE_MODE);
   acknowledgeCommand();
 }
 
-void cmdIncrementalMode() {  
+void cmdIncrementalMode() { //G91
   unsetFlag(FLAG_ABSOLUTE_MODE);
   acknowledgeCommand();
 }
 
-void cmdNone() {
+void cmdNone() { //No command
   addToBufferS("NONE N",6);
   addToBufferI(cmdLine);
   addToBufferC('\n');

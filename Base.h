@@ -18,15 +18,15 @@ typedef uint_fast16_t UINT;
 #define setFlag(n) (stateFlags |= (n))
 #define unsetFlag(n) (stateFlags &= ~(n))
 
-static const UBYTE FLAG_ENABLE        = 0x01,
-                   FLAG_X             = 0x02,
-                   FLAG_Y             = 0x04,
-                   FLAG_Z             = 0x08,
-                   FLAG_E             = 0x10,
-                   FLAGS_AXES         = FLAG_E | FLAG_Z | FLAG_Y | FLAG_X,
-                   FLAG_HOTEND_ON     = 0x20,
-                   FLAG_ABSOLUTE_MODE = 0x40,
-                   FLAG_ACTIVE_TEMP   = 0x80;
+const UBYTE FLAG_ENABLE        = 0x01,
+            FLAG_X             = 0x02,
+            FLAG_Y             = 0x04,
+            FLAG_Z             = 0x08,
+            FLAG_E             = 0x10,
+            FLAGS_AXES         = FLAG_E | FLAG_Z | FLAG_Y | FLAG_X,
+            FLAG_HOTEND_ON     = 0x20,
+            FLAG_ABSOLUTE_MODE = 0x40,
+            FLAG_ACTIVE_TEMP   = 0x80;
                    
 const ULONG PID_PERIOD      = 200000,
             WORKER_PERIOD   = 15;
