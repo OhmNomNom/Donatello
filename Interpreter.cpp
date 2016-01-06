@@ -304,9 +304,9 @@ inline void acknowledgeCommand() {
 void rapidPositioning() {
   float motion[3];
   if(isFlagSet(FLAG_ABSOLUTE_MODE)) {
-    motion[X] = isnan(cmdParams[X])?0:(cmdParams[X] - axisPosition[X]*STEPLENGTH[X]);
-    motion[Y] = isnan(cmdParams[Y])?0:(cmdParams[Y] - axisPosition[Y]*STEPLENGTH[Y]);
-    motion[Z] = isnan(cmdParams[Z])?0:(cmdParams[Z] - axisPosition[Z]*STEPLENGTH[Z]);
+    motion[X] = isnan(cmdParams[X])?0:(cmdParams[X] - Axes[X].position*STEPLENGTH[X]);
+    motion[Y] = isnan(cmdParams[Y])?0:(cmdParams[Y] - Axes[Y].position*STEPLENGTH[Y]);
+    motion[Z] = isnan(cmdParams[Z])?0:(cmdParams[Z] - Axes[Z].position*STEPLENGTH[Z]);
   } else {
     motion[X] = isnan(cmdParams[X])?0:cmdParams[X];
     motion[Y] = isnan(cmdParams[Y])?0:cmdParams[Y];
@@ -338,9 +338,9 @@ void linearInterpolation() {
   
   float motion[3];
   if(isFlagSet(FLAG_ABSOLUTE_MODE)) {
-    motion[X] = isnan(cmdParams[X])?0:(cmdParams[X] - axisPosition[X]*STEPLENGTH[X]);
-    motion[Y] = isnan(cmdParams[Y])?0:(cmdParams[Y] - axisPosition[Y]*STEPLENGTH[Y]);
-    motion[Z] = isnan(cmdParams[Z])?0:(cmdParams[Z] - axisPosition[Z]*STEPLENGTH[Z]);
+    motion[X] = isnan(cmdParams[X])?0:(cmdParams[X] - Axes[X].position*STEPLENGTH[X]);
+    motion[Y] = isnan(cmdParams[Y])?0:(cmdParams[Y] - Axes[Y].position*STEPLENGTH[Y]);
+    motion[Z] = isnan(cmdParams[Z])?0:(cmdParams[Z] - Axes[Z].position*STEPLENGTH[Z]);
   } else {
     motion[X] = isnan(cmdParams[X])?0:cmdParams[X];
     motion[Y] = isnan(cmdParams[Y])?0:cmdParams[Y];
@@ -419,13 +419,13 @@ void cmdPosition() {
   addToBufferS("POS N",5);
   addToBufferI(cmdLine);
   addToBufferS(" X",2);
-  addToBufferF(axisPosition[X]*STEPLENGTH[X]);
+  addToBufferF(Axes[X].position*STEPLENGTH[X]);
   addToBufferS(" Y",2);
-  addToBufferF(axisPosition[Y]*STEPLENGTH[Y]);
+  addToBufferF(Axes[Y].position*STEPLENGTH[Y]);
   addToBufferS(" Z",2);
-  addToBufferF(axisPosition[Z]*STEPLENGTH[Z]);
+  addToBufferF(Axes[Z].position*STEPLENGTH[Z]);
   addToBufferS(" E",2);
-  addToBufferF(axisPosition[E]*STEPLENGTH[E]);
+  addToBufferF(Axes[E].position*STEPLENGTH[E]);
   addToBufferC('\n');
 }
 
@@ -437,8 +437,8 @@ void cmdSetTemperature() {
 }
 
 void cmdSetPos() {
-  if(!isnan(cmdParams[X])) axisPosition[X] = cmdParams[X] / STEPLENGTH[X];
-  if(!isnan(cmdParams[Y])) axisPosition[Y] = cmdParams[Y] / STEPLENGTH[Y];
-  if(!isnan(cmdParams[Z])) axisPosition[Z] = cmdParams[Z] / STEPLENGTH[Z];
+  if(!isnan(cmdParams[X])) Axes[X].position = cmdParams[X] / STEPLENGTH[X];
+  if(!isnan(cmdParams[Y])) Axes[Y].position = cmdParams[Y] / STEPLENGTH[Y];
+  if(!isnan(cmdParams[Z])) Axes[Z].position = cmdParams[Z] / STEPLENGTH[Z];
   acknowledgeCommand();
 }

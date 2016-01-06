@@ -1,8 +1,6 @@
 #include "Axes.h"
          
 volatile Axis Axes[4];
-volatile SLONG axisPosition[4];
-SBYTE axisDirection[4]; //-1 for reverse, 1 for fwd
 
 void initAxes() {
   //Setup all axes
@@ -11,7 +9,7 @@ void initAxes() {
     pinMode(DIRPORT[i], OUTPUT);
     digitalWrite(MOVPORT[i], HIGH);
     digitalWrite(DIRPORT[i], INVERT[i]);
-    axisPosition[i] = 0;
+    Axes[i].position = 0;
   }
   resetAxes();
 }
@@ -32,7 +30,6 @@ bool moveAxis(ParamIndex axis, float distance, float rate) {
 
   //Set the correct direction
   digitalWrite(DIRPORT[axis], ((distance < 0) xor (INVERT[axis])));
-  axisDirection[axis] = ((distance < 0)?1:-1);
   
   if(distance < 0) distance = -distance; //Absolute value
   
@@ -79,7 +76,7 @@ void stepperWorker(const ULONG now) {
         digitalWrite(MOVPORT[X], HIGH); //Prepare for next movement
         Axes[X].steps--; //We moved 1 step!!
         Axes[X].lastMicros += Axes[X].stepTime; //Last time we moved
-        axisPosition[X] += axisDirection[X]; //Either +1 or -1, depending on how we're moving
+        Axes[X].position += Axes[X].direction; //Either +1 or -1, depending on how we're moving
       }
     } else unsetFlag(MOVFLAG[X]); //We finished our movement
   }
@@ -91,7 +88,7 @@ void stepperWorker(const ULONG now) {
         digitalWrite(MOVPORT[Y], HIGH);
         Axes[Y].steps--;
         Axes[Y].lastMicros += Axes[Y].stepTime;
-        axisPosition[Y] += axisDirection[Y];
+        Axes[Y].position += Axes[Y].direction;
       }
     } else unsetFlag(MOVFLAG[Y]);
   }
@@ -101,7 +98,7 @@ void stepperWorker(const ULONG now) {
         digitalWrite(MOVPORT[Z], HIGH);
         Axes[Z].steps--;
         Axes[Z].lastMicros += Axes[Z].stepTime;
-        axisPosition[Z] += axisDirection[Z];
+        Axes[Z].position += Axes[Z].direction;
       }
     } else unsetFlag(MOVFLAG[Z]);
   }
@@ -111,7 +108,7 @@ void stepperWorker(const ULONG now) {
         digitalWrite(MOVPORT[E], HIGH);
         Axes[E].steps--;
         Axes[E].lastMicros += Axes[E].stepTime;
-        axisPosition[E] += axisDirection[E];
+        Axes[E].position += Axes[E].direction;
       }
     } else unsetFlag(MOVFLAG[E]);
   }

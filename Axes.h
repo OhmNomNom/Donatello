@@ -51,10 +51,11 @@ struct Axis {
   ULONG stepTime;   //Time for each step in us
   ULONG steps;      //# of steps remaining in motion
   SLONG lastMicros; //Last time we moved in us
+  SBYTE direction;  //Direction we're moving in; +1 or -1
+  SLONG position;   //Number of steps taken from home
 };
 
 extern volatile Axis Axes[];
-extern volatile SLONG axisPosition[];
 
 void initAxes();
 void resetAxes();
